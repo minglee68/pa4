@@ -8,13 +8,26 @@ sm_container_ptr sm_unused_containers = 0x0 ;
 
 void sm_container_split(sm_container_ptr hole, size_t size)
 {
+	sm_container_ptr itr = 0x0 ;
 	sm_container_ptr remainder = hole->data + size ;
 
 	remainder->data = ((void *)remainder) + sizeof(sm_container_t) ;
 	remainder->dsize = hole->dsize - size - sizeof(sm_container_t) ;
 	remainder->status = Unused ;
 	remainder->next = hole->next ;
+	remainder->next_unused = hole->next_unused;
 	hole->next = remainder ;
+	hole->next_unused = 0x0;
+
+	if (sm_unused_containers == hole) {
+		sm_unused_containers = remainder;
+	} else {	
+		for (itr = sm_unused_containers; itr->next != 0x0; itr = itr->next_unused) {
+			if (itr->next_unused == hole) {
+				itr->next_unused = remainder;
+			}
+		}
+	}
 
 	if (hole == sm_last)
 		sm_last = remainder ;
@@ -43,29 +56,21 @@ void * smalloc(size_t size)
 	sm_container_ptr hole = 0x0 ;
 
 	sm_container_ptr itr = 0x0 ;
-	/*
-	for (itr = sm_first ; itr != 0x0 ; itr = itr->next) {
-		if (itr->status == Busy)
-			continue ;
-
+	sm_container_ptr itr2 = 0x0 ;
+	for (itr = sm_unused_containers; itr != 0x0 ; itr = itr->next_unused) {
 		if (size == itr->dsize) {
-			// a hole of the exact size
-			itr->status = Busy ;
-			return itr->data ;
-		}
-		else if (size + sizeof(sm_container_t) < itr->dsize) {
-			// a hole large enought to split 
-			hole = itr ;
-			break ; 
-		}
-	}
-	*/
-	for (itr = sm_first ; itr != 0x0 ; itr = itr->next) {
-		if (itr->status == Busy)
-			continue ;
-		
-		if (size == itr->dsize) {
-			itr->status = Busy ;
+			if (itr == sm_unused_containers) {
+				sm_unused_containers = itr->next_unused;
+				itr->next_unused = 0x0;
+			} else {
+				for (itr2 = sm_unused_containers; itr2 != 0x0; itr2->next_unused) {
+					if (itr2->next_unused == itr) {
+						itr2->next_unused = itr->next_unused;
+						itr->next_unused = 0x0;
+					}
+				}
+			}
+			itr->status = Busy;
 			return itr->data ;
 		}
 		else if (size + sizeof(sm_container_t) < itr->dsize) {
@@ -75,6 +80,7 @@ void * smalloc(size_t size)
 				hole = itr;
 		}
 	}
+	printf("after split\n");
 	if (hole == 0x0) {
 		hole = sm_retain_more_memory(size) ;
 
@@ -84,12 +90,19 @@ void * smalloc(size_t size)
 		if (sm_first == 0x0) {
 			sm_first = hole ;
 			sm_last = hole ;
+			sm_unused_containers = hole;
 			hole->next = 0x0 ;
+			hole->next_unused = 0x0;
 		}
 		else {
 			sm_last->next = hole ;
 			sm_last = hole ;
+			for (itr = sm_unused_containers; itr != 0x0; itr = itr->next_unused) {
+				if (itr->next_unused == 0x0)
+					itr->next_unused = hole;
+			}
 			hole->next = 0x0 ;
+			hole->next_unused = 0x0;
 		}
 	}
 	sm_container_split(hole, size) ;

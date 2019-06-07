@@ -5,7 +5,7 @@ typedef enum {
 typedef struct _sm_container_t {
 	sm_container_status status ;
 	struct _sm_container_t * next ;
-	/* struct _sm_container_t * next_unused ; */
+	struct _sm_container_t * next_unused ;
 	size_t dsize ;
 	void * data ;
 } sm_container_t ;
