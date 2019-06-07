@@ -33,5 +33,4 @@ main()
 	printf("smalloc(2200)\n") ; 
 	print_sm_containers() ;
 
-	print_sm_uses();
 }

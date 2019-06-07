@@ -43,21 +43,19 @@ void * smalloc(size_t size)
 	sm_container_ptr hole = 0x0 ;
 
 	sm_container_ptr itr = 0x0 ;
-
-	// Task 1.2
 	for (itr = sm_first ; itr != 0x0 ; itr = itr->next) {
 		if (itr->status == Busy)
 			continue ;
-		
+
 		if (size == itr->dsize) {
+			// a hole of the exact size
 			itr->status = Busy ;
 			return itr->data ;
 		}
 		else if (size + sizeof(sm_container_t) < itr->dsize) {
-			if (hole != 0x0 && hole->dsize > itr->dsize)
-				hole = itr;
-			else if (hole == 0x0)
-				hole = itr;
+			// a hole large enought to split 
+			hole = itr ;
+			break ; 
 		}
 	}
 	if (hole == 0x0) {
@@ -115,26 +113,4 @@ void print_sm_containers()
 	}
 	printf("=======================================================\n") ;
 
-}
-
-// Task 1.1
-void print_sm_uses() {
-	sm_container_ptr itr;
-	int i = 0;
-	size_t total_size = 0;
-	size_t busy_size = 0;
-	size_t unused_size = 0;
-
-	for (itr = sm_first; itr != 0x0; itr = itr->next, i++) {
-		char * s;
-		total_size += itr->dsize;
-		if (itr->status == Unused)
-			unused_size += itr->dsize;
-		else
-			busy_size += itr->dsize;
-	}
-
-	fprintf(stderr, "Total memory retained by smalloc so far : %d\n", (int) total_size);
-	fprintf(stderr, "Total memory allocated by smalloc at this moment : %d\n", (int) busy_size);
-	fprintf(stderr, "Total memory retained by smalloc but not currently allocated : %d\n", (int) unused_size);
 }

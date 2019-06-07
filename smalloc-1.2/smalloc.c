@@ -6,6 +6,7 @@ sm_container_ptr sm_first = 0x0 ;
 sm_container_ptr sm_last = 0x0 ;
 sm_container_ptr sm_unused_containers = 0x0 ;
 
+// Task 2-1
 void sm_container_split(sm_container_ptr hole, size_t size)
 {
 	sm_container_ptr itr = 0x0 ;
@@ -51,6 +52,7 @@ void * sm_retain_more_memory(int size)
 	return hole ;
 }
 
+// Task 2-1
 void * smalloc(size_t size) 
 {
 	sm_container_ptr hole = 0x0 ;
@@ -80,7 +82,6 @@ void * smalloc(size_t size)
 				hole = itr;
 		}
 	}
-	printf("after split\n");
 	if (hole == 0x0) {
 		hole = sm_retain_more_memory(size) ;
 
@@ -98,8 +99,10 @@ void * smalloc(size_t size)
 			sm_last->next = hole ;
 			sm_last = hole ;
 			for (itr = sm_unused_containers; itr != 0x0; itr = itr->next_unused) {
-				if (itr->next_unused == 0x0)
+				if (itr->next_unused == 0x0) {
 					itr->next_unused = hole;
+					break;
+				}
 			}
 			hole->next = 0x0 ;
 			hole->next_unused = 0x0;
@@ -112,15 +115,45 @@ void * smalloc(size_t size)
 }
 
 
-
+// Task 2-1
 void sfree(void * p)
 {
 	sm_container_ptr itr ;
+	sm_container_ptr itr_unused = 0x0 ;
+	sm_container_ptr free ;
+	int unused_flag = 0;
+	int free_flag = 0;
 	for (itr = sm_first ; itr->next != 0x0 ; itr = itr->next) {
-		if (itr->data == p) {
-			itr->status = Unused ;
-			break ;
+		if (itr == sm_unused_containers) {
+			if (free_flag == 1) {
+				free->next_unused = sm_unused_containers;
+				sm_unused_containers = free;
+				break;
+			}
+			unused_flag = 1;
+			itr_unused = itr;
 		}
+		if (itr_unused != 0x0 && itr == itr_unused->next_unused) itr_unused = itr;
+		if (itr->data == p) {
+			free = itr;
+			itr->status = Unused ;
+			free_flag = 1;
+			if (unused_flag == 1) {
+				free->next_unused = itr_unused->next_unused;
+				itr_unused->next_unused = free;
+				break;
+			}
+		}
+	}
+	
+	// Task 2-2
+	for (itr = sm_first ; itr->next != 0x0 ; itr = itr->next) {
+		if (itr->next_unused == itr->next) {
+			itr->dsize += itr->next->dsize + sizeof(sm_container_t);
+			itr->next_unused = itr->next->next_unused;
+			itr->next = itr->next->next;
+		}
+		if (itr->next == 0x0) break;
 	}
 }
 
@@ -161,7 +194,7 @@ void print_sm_uses() {
 			busy_size += itr->dsize;
 	}
 
-	printf("Total memory retained by smalloc so far : %d\n", (int) total_size);
-	printf("Total memory allocated by smalloc at this moment : %d\n", (int) busy_size);
-	printf("Total memory retained by smalloc but not currently allocated : %d\n", (int) unused_size);
+	fprintf(stderr, "Total memory retained by smalloc so far : %d\n", (int) total_size);
+	fprintf(stderr, "Total memory allocated by smalloc at this moment : %d\n", (int) busy_size);
+	fprintf(stderr, "Total memory retained by smalloc but not currently allocated : %d\n", (int) unused_size);
 }

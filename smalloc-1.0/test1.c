@@ -1,15 +1,14 @@
 #include <stdio.h>
 #include "smalloc.h"
 
-// Task 1.3
 int 
 main()
 {
-	void *p1, *p2, *p3, *p4, *p5 ;
+	void *p1, *p2, *p3, *p4 ;
 
 	print_sm_containers() ;
 
-	p1 = smalloc(2300) ; 
+	p1 = smalloc(2000) ; 
 	printf("smalloc(2000)\n") ; 
 	print_sm_containers() ;
 
@@ -21,17 +20,11 @@ main()
 	printf("sfree(%p)\n", p1) ; 
 	print_sm_containers() ;
 
-	p3 = smalloc(1400) ; 
-	printf("smalloc(1500)\n") ; 
+	p3 = smalloc(1000) ; 
+	printf("smalloc(1000)\n") ; 
 	print_sm_containers() ;
 
-	p4 = smalloc(1650) ; 
-	printf("smalloc(1650)\n") ; 
+	p4 = smalloc(1000) ; 
+	printf("smalloc(1000)\n") ; 
 	print_sm_containers() ;
-
-	p5 = smalloc(2200) ; 
-	printf("smalloc(2200)\n") ; 
-	print_sm_containers() ;
-
-	print_sm_uses();
 }
