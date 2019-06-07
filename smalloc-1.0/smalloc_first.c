@@ -43,7 +43,6 @@ void * smalloc(size_t size)
 	sm_container_ptr hole = 0x0 ;
 
 	sm_container_ptr itr = 0x0 ;
-	/*
 	for (itr = sm_first ; itr != 0x0 ; itr = itr->next) {
 		if (itr->status == Busy)
 			continue ;
@@ -57,22 +56,6 @@ void * smalloc(size_t size)
 			// a hole large enought to split 
 			hole = itr ;
 			break ; 
-		}
-	}
-	*/
-	for (itr = sm_first ; itr != 0x0 ; itr = itr->next) {
-		if (itr->status == Busy)
-			continue ;
-		
-		if (size == itr->dsize) {
-			itr->status = Busy ;
-			return itr->data ;
-		}
-		else if (size + sizeof(sm_container_t) < itr->dsize) {
-			if (hole != 0x0 && hole->dsize > itr->dsize)
-				hole = itr;
-			else if (hole == 0x0)
-				hole = itr;
 		}
 	}
 	if (hole == 0x0) {
